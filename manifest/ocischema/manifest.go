@@ -48,6 +48,8 @@ type Manifest struct {
 	// configuration.
 	Layers []distribution.Descriptor `json:"layers"`
 
+	Reference distribution.Descriptor `json:"reference,omitempty"`
+
 	// Annotations contains arbitrary metadata for the image manifest.
 	Annotations map[string]string `json:"annotations,omitempty"`
 }

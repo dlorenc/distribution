@@ -25,6 +25,9 @@ type Builder struct {
 	// Annotations contains arbitrary metadata relating to the targeted content.
 	annotations map[string]string
 
+	// reference is an object this manifest references
+	reference distribution.Descriptor
+
 	// For testing purposes
 	mediaType string
 }
@@ -64,6 +67,7 @@ func (mb *Builder) Build(ctx context.Context) (distribution.Manifest, error) {
 		},
 		Layers:      make([]distribution.Descriptor, len(mb.layers)),
 		Annotations: mb.annotations,
+		Reference:   mb.reference,
 	}
 	copy(m.Layers, mb.layers)
 
