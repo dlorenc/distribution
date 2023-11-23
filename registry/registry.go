@@ -13,9 +13,9 @@ import (
 	"syscall"
 	"time"
 
-	"rsc.io/letsencrypt"
-
 	logrus_bugsnag "github.com/Shopify/logrus-bugsnag"
+	"golang.org/x/crypto/acme"
+	"golang.org/x/crypto/acme/autocert"
 
 	logstash "github.com/bshuster-repo/logrus-logstash-hook"
 	"github.com/bugsnag/bugsnag-go"
@@ -28,6 +28,7 @@ import (
 	"github.com/docker/distribution/version"
 	"github.com/docker/go-metrics"
 	gorhandlers "github.com/gorilla/handlers"
+	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/yvasiyarov/gorelic"
@@ -246,19 +247,15 @@ func (registry *Registry) ListenAndServe() error {
 			if config.HTTP.TLS.Certificate != "" {
 				return fmt.Errorf("cannot specify both certificate and Let's Encrypt")
 			}
-			var m letsencrypt.Manager
-			if err := m.CacheFile(config.HTTP.TLS.LetsEncrypt.CacheFile); err != nil {
-				return err
-			}
-			if !m.Registered() {
-				if err := m.Register(config.HTTP.TLS.LetsEncrypt.Email, nil); err != nil {
-					return err
-				}
-			}
-			if len(config.HTTP.TLS.LetsEncrypt.Hosts) > 0 {
-				m.SetHosts(config.HTTP.TLS.LetsEncrypt.Hosts)
+
+			m := &autocert.Manager{
+				HostPolicy: autocert.HostWhitelist(config.HTTP.TLS.LetsEncrypt.Hosts...),
+				Cache:      autocert.DirCache(config.HTTP.TLS.LetsEncrypt.CacheFile),
+				Email:      config.HTTP.TLS.LetsEncrypt.Email,
+				Prompt:     autocert.AcceptTOS,
 			}
 			tlsConf.GetCertificate = m.GetCertificate
+			tlsConf.NextProtos = append(tlsConf.NextProtos, acme.ALPNProto)
 		} else {
 			tlsConf.Certificates = make([]tls.Certificate, 1)
 			tlsConf.Certificates[0], err = tls.LoadX509KeyPair(config.HTTP.TLS.Certificate, config.HTTP.TLS.Key)
@@ -363,9 +360,10 @@ func configureLogging(ctx context.Context, config *configuration.Configuration) 
 			TimestampFormat: time.RFC3339Nano,
 		})
 	case "logstash":
-		log.SetFormatter(&logstash.LogstashFormatter{
-			TimestampFormat: time.RFC3339Nano,
-		})
+		log.SetFormatter(logstash.LogstashFormatter{
+			Formatter: &logrus.JSONFormatter{
+				TimestampFormat: time.RFC3339Nano,
+			}})
 	default:
 		// just let the library use default on empty string.
 		if config.Log.Formatter != "" {
