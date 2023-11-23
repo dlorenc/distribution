@@ -2,15 +2,30 @@
 
 The Docker toolset to pack, ship, store, and deliver content.
 
+## PURPOSE OF THIS REPO
+
+This is a maintenance fork of the distribution/distribution repo that attempts to "modernize" the v2 release.
+
+The v2 release of distribution/distribution is several years old and the maintainers are working on a v3 release.
+The v2 release is still in common usage, but the go code is quite old and doesn't work with modern Go tooling, vulnerability scanners,
+or dependencies.
+
+This fork contains the following changes:
+
+* Switch to go.mod from vendor.conf
+* Port to a modern let's encrypt library (autocert instead of rsc.io/letsencrypt)
+* Dependency updates across the board
+
+The base branch this was created against is [here](https://github.com/distribution/distribution/tree/v2.8.3).
+
+I'll maintain this for CVEs and dependency updates until the v3 release comes out and users transition to that.
+
+## Documentation
+
 This repository provides the Docker Registry 2.0 implementation
 for storing and distributing Docker images. It supersedes the
 [docker/docker-registry](https://github.com/docker/docker-registry)
 project with a new API design, focused around security and performance.
-
-<img src="https://www.docker.com/sites/default/files/oyster-registry-3.png" width=200px/>
-
-[![Circle CI](https://circleci.com/gh/docker/distribution/tree/master.svg?style=svg)](https://circleci.com/gh/docker/distribution/tree/master)
-[![GoDoc](https://godoc.org/github.com/docker/distribution?status.svg)](https://godoc.org/github.com/docker/distribution)
 
 This repository contains the following components:
 
